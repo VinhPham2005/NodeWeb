@@ -29,15 +29,16 @@ app.get("/photosOfUser/:userId", (req, res) => {
   const userId = req.params.userId;
   const photos = models.photoOfUserModel(userId);
 
-  const photosWithUrl = photos.map(p => ({
+  const photosWithUrl = photos.map((p) => ({
     ...p,
-    url: `${req.protocol}://${req.get("host")}/images/${p.file_name}` // full URL
+    url: `${req.protocol}://${req.get("host")}/images/${p.file_name}`, // full URL
   }));
 
   res.json(photosWithUrl);
 });
 
 // Start server
-app.listen(3001, () => {
-  console.log("Backend running at http://localhost:3001");
-});
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () =>
+  console.log(`Backend running at http://localhost:${PORT}`)
+);
