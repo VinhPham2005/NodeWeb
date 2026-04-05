@@ -4,6 +4,7 @@ const path = require("path");
 const models = require("./modelData/models");
 
 const app = express();
+const port = process.env.PORT || 3001;
 app.use(cors());
 
 // Serve folder ảnh tĩnh 1 lần duy nhất
@@ -29,15 +30,15 @@ app.get("/photosOfUser/:userId", (req, res) => {
   const userId = req.params.userId;
   const photos = models.photoOfUserModel(userId);
 
-  const photosWithUrl = photos.map(p => ({
+  const photosWithUrl = photos.map((p) => ({
     ...p,
-    url: `${req.protocol}://${req.get("host")}/images/${p.file_name}` // full URL
+    url: `/images/${p.file_name}`,
   }));
 
   res.json(photosWithUrl);
 });
 
 // Start server
-app.listen(3001, () => {
-  console.log("Backend running at http://localhost:3001");
+app.listen(port, () => {
+  console.log(`Backend running at http://localhost:${port}`);
 });
