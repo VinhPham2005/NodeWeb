@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 // Serve folder ảnh tĩnh 1 lần duy nhất
-app.use("/images", express.static(path.join(__dirname, "public/images")));
+app.use("/images", express.static(path.join(__dirname, "public/images"))); 
 
 // API test
 app.get("/test/info", (req, res) => {
