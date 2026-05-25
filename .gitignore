@@ -1,11 +1,1 @@
 /node_modules
-/routes
-/.env
-/index.js
-/package.json
-/package-lock.json
-/README.md
-/yarn.lock
-/db
-/images
-/modelData
