@@ -2,7 +2,57 @@ const express = require("express");
 const Photo = require("../db/photoModel");
 const User = require("../db/userModel");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).send("Unauthorized: Missing token.");
+  }
+  
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send("Unauthorized: Invalid or expired token.");
+    }
+    req.userId = decoded.userId;
+    next();
+  });
+};
+
+router.use(verifyToken);
+
+router.post("/commentsOfPhoto/:photoId", async (req, res) => {
+  const photoId = req.params.photoId;
+  const { comment } = req.body;
+
+  if (!comment || comment.trim() === "") {
+    return res.status(400).send("Comment cannot be empty");
+  }
+
+  try {    
+    const photo = await Photo.findById(photoId);
+    if (!photo) {
+      return res.status(404).send("Photo not found");
+    } else {
+      const newComment = {
+        comment: comment, 
+        user_id: req.userId,
+        date_time: new Date(),
+      };
+      photo.comments.push(newComment);
+      await photo.save();
+      res.status(200).json({ message: "Comment added successfully" });
+    }
+  } catch (err) {    
+    res.status(500).send(err.message);
+  }
+});
 
 
 router.get("/:id", async (request, response) => {
