@@ -3,6 +3,9 @@ const Photo = require("../db/photoModel");
 const User = require("../db/userModel");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const multer = require("multer"); 
+const path = require("path");
+const fs = require("fs");
 require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -90,6 +93,49 @@ router.get("/:id", async (request, response) => {
   } catch (error) {
     console.error(error);
     response.status(400).send({ message: "Invalid ID", error: error.message });
+  }
+});
+
+const uploadDir = path.join(__dirname, "../images"); // Trỏ ra thư mục images ở ngoài root
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir); // Tự động tạo thư mục images nếu chưa có
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // 3. Yêu cầu đề bài: Tạo tên file độc nhất (Unique name)
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext); 
+  },
+});
+
+const upload = multer({ storage: storage });
+
+// 4. API POST /new để nhận ảnh
+router.post("/new", upload.single("photo"), async (req, res) => {
+  // Báo lỗi 400 nếu request không có file (Đúng yêu cầu đề bài)
+  if (!req.file) {
+    return res.status(400).send("Không tìm thấy file trong request.");
+  }
+
+  try {
+    // Tạo object Photo mới với tên file độc nhất, ngày tạo và ID người đăng
+    const newPhoto = new Photo({
+      file_name: req.file.filename,
+      date_time: new Date(),
+      user_id: req.userId, // req.userId lấy từ verifyToken
+      comments: [],
+    });
+
+    await newPhoto.save();
+    res.status(200).send(newPhoto);
+  } catch (error) {
+    console.error("Lỗi khi upload ảnh:", error);
+    res.status(500).send("Lỗi server khi upload ảnh");
   }
 });
 
